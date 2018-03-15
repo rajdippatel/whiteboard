@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Whiteboard Test</title>
+    <script src="scripts/whiteboard.js"></script>
+    <script src="scripts/app.js"></script>
+    <style>
+        * 
+        {
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="whiteboard" width="1024" height="768" style="border: 1px solid"></canvas>
+
+    <br />
+    <br />
+    <div>
+        <button onclick="onRectableButtonClick();">Rectangle</button>
+        <button onclick="onFreeHandButtonClick();">FreeHand</button>
+        <button onclick="onArrowButtonClick();">Arrow</button>
+    </div>
+    <br />
+    <div>
+        <button onclick="onUndoButtonClick();">Undo</button>
+        <button onclick="onRedoButtonClick();">Redo</button>
+    </div>
+    <br />
+</body>
+</html>
