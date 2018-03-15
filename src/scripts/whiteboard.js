@@ -48,6 +48,8 @@
         this.dirtyRect = null;
 
         this.currentShapeType = ShapeType.Rectangle;
+        this.currentColor = "#000000";
+
         this.init();        
     }
 
@@ -62,19 +64,43 @@
     }
 
     proto.init = function () {
+        this.initSize();
         this.attachEvents();
+    }
+
+    proto.initSize = function() {
+        if(devicePixelRatio != 1) {
+            var canvas = this.canvas;
+            var ctx = this.ctx;
+
+            var width = canvas.width;
+            var height = canvas.height;
+
+            canvas.width = canvas.width * devicePixelRatio;
+            canvas.height = canvas.height * devicePixelRatio;
+
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+
+            ctx.scale(devicePixelRatio, devicePixelRatio);
+        }
     }
 
     proto.setShapeType = function (shapeType) {
         this.currentShapeType = shapeType;
     }
 
+    proto.setColor = function (color) {
+        this.currentColor = color;
+    }
+
     proto.attachEvents = function () {
         this.registerEvent(this.canvas, "mousedown", this.onMouseDown);
     }
 
-    proto.draw = function (toolType) {
-        this.activeShapeType = toolType;
+    proto.clear = function () {
+        this.shapes = this.undoShapes = [];
+        this.drawShapes();
     }
 
     proto.registerEvent = function (element, eventType, eventHandler) {
@@ -91,7 +117,7 @@
             this.registerEvent(document, "mousemove", this.onMouseMove);
             this.registerEvent(document, "mouseup", this.onMouseUp);
             this.clientRect = this.canvas.getBoundingClientRect();
-            this.shapes.push(this.activeShape = new Shape(this.currentShapeType, "#000000", [this.getOffsetPoint(e), this.getOffsetPoint(e)]));            
+            this.shapes.push(this.activeShape = new Shape(this.currentShapeType, this.currentColor, [this.getOffsetPoint(e), this.getOffsetPoint(e)]));            
         }
     }
 
@@ -108,17 +134,19 @@
     }
 
     proto.processEvent = function (e, pixelBackupHandler) {
-        switch (this.activeShape.type) {
-            case ShapeType.Rectangle:
-            case ShapeType.Arrow:
-                this.activeShape.points[1] = this.getOffsetPoint(e);
-                break;
-            case ShapeType.FreeHand:
-                this.activeShape.points.push(this.getOffsetPoint(e));
-                break;
-        }
-        this.eraseDirtyRect();
-        this.drawShape(this.activeShape, pixelBackupHandler);
+        if(this.activeShape != null) {
+            switch (this.activeShape.type) {
+                case ShapeType.Rectangle:
+                case ShapeType.Arrow:
+                    this.activeShape.points[1] = this.getOffsetPoint(e);
+                    break;
+                case ShapeType.FreeHand:
+                    this.activeShape.points.push(this.getOffsetPoint(e));
+                    break;
+            }
+            this.eraseDirtyRect();
+            this.drawShape(this.activeShape, pixelBackupHandler);
+        }        
     }
 
     proto.drawShapes = function () {
@@ -147,7 +175,7 @@
         var points = shape.points;        
         if (pixelBackupHandler) {
             var drawingRect = getMaxBoudingRect(points);
-            pixelBackupHandler(new Rect(drawingRect.x - 25, drawingRect.y - 25, drawingRect.width + 50, drawingRect.height + 50));
+            pixelBackupHandler(new Rect(drawingRect.x * devicePixelRatio - 25, drawingRect.y * devicePixelRatio - 25, drawingRect.width * devicePixelRatio + 50, drawingRect.height * devicePixelRatio + 50));
         }
 
         // Draw line
@@ -167,7 +195,7 @@
         var points = shape.points;
         var drawingRect = getMaxBoudingRect(points);
         if (pixelBackupHandler) {
-            pixelBackupHandler(new Rect(drawingRect.x - 1, drawingRect.y - 1, drawingRect.width + 2, drawingRect.height + 2));
+            pixelBackupHandler(new Rect(drawingRect.x * devicePixelRatio - 2, drawingRect.y * devicePixelRatio - 2, drawingRect.width * devicePixelRatio + 10, drawingRect.height * devicePixelRatio + 10));
         }
         this.ctx.beginPath();
         this.ctx.strokeRect(drawingRect.x + ALIAS_OFFSET, drawingRect.y + ALIAS_OFFSET, drawingRect.width, drawingRect.height);

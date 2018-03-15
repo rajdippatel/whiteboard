@@ -21,5 +21,13 @@ function onUndoButtonClick() {
 
 function onRedoButtonClick() {
     whiteboard.redo();
-
 }
+
+function onClearButtonClick() {
+    whiteboard.clear();
+}
+
+function onColorButtonClick(color) {
+    whiteboard.setColor(color);
+}
+

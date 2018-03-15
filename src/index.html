@@ -6,17 +6,12 @@
     <script src="scripts/whiteboard.js"></script>
     <script src="scripts/app.js"></script>
     <style>
-        * 
-        {
+        * {
             user-select: none;
         }
     </style>
 </head>
 <body>
-    <canvas id="whiteboard" width="1024" height="768" style="border: 1px solid"></canvas>
-
-    <br />
-    <br />
     <div>
         <button onclick="onRectableButtonClick();">Rectangle</button>
         <button onclick="onFreeHandButtonClick();">FreeHand</button>
@@ -26,7 +21,20 @@
     <div>
         <button onclick="onUndoButtonClick();">Undo</button>
         <button onclick="onRedoButtonClick();">Redo</button>
+        <button onclick="onClearButtonClick();">Clear</button>
     </div>
     <br />
+    <div>
+        <button onclick="onColorButtonClick('red');">Red</button>
+        <button onclick="onColorButtonClick('blue');">Blue</button>
+        <button onclick="onColorButtonClick('green');">Green</button>
+        <button onclick="onColorButtonClick('black');">Black</button>
+    </div>
+    <br />
+    <div>
+        <canvas id="whiteboard" width="1024" height="450" style="border: 1px solid"></canvas>
+    </div>
+
+
 </body>
 </html>
