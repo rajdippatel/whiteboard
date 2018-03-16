@@ -2,10 +2,13 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Whiteboard Test</title>
+    <title>Whiteboard</title>
     <script src="scripts/whiteboard.js"></script>
     <script src="scripts/app.js"></script>
     <style>
+        /*
+         Disables user-selection to remove selection white drawing on whiteboard.
+        */
         * {
             user-select: none;
         }
@@ -34,7 +37,5 @@
     <div>
         <canvas id="whiteboard" width="1024" height="450" style="border: 1px solid"></canvas>
     </div>
-
-
 </body>
 </html>
