@@ -95,6 +95,10 @@ whiteboard.clear();
         this.points = points || [];
     }
 
+    /*
+        setName Method:-
+        name: Name of shape
+    */
     Shape.prototype.setName = function(name) {
         this.name = name;
     }
@@ -378,6 +382,67 @@ whiteboard.clear();
         var radians = Math.atan((points[1].y - points[0].y) / (points[1].x - points[0].x));
         radians += ((points[1].x > points[0].x) ? 90 : -90) * Math.PI / 180;
         drawArrowhead(this.ctx, points[1].x, points[1].y, radians, shape.color);
+
+        if(shape.name) {
+            this.drawArrowName(shape, points[0], points[1]);
+        }
+    }
+
+    /*
+        drawArrayName Method:-
+        Draws array shape name
+        shape: Shape object
+        startPoint: Line start point
+        endPoint: Line end point
+    */
+    proto.drawArrowName = function(shape, startPoint, endPoint) {
+        var textHeight = 15;
+        var padding = new Point(5, 5);
+
+        var ctx = this.ctx;
+        
+        ctx.font = textHeight + "px" + " calibri";
+        var textMetrics = ctx.measureText(shape.name);
+        
+        var totalWidth = textMetrics.width + 2 * padding.x;
+        var totalHeight = textHeight + 2 * padding.y;
+        var drawingOffset = textHeight;
+
+        // Line starting from left-top to right-bottom  and
+        // Line starting from right-top to bottom-left
+        var drawingPoint = endPoint;
+        while(startPoint.y <= drawingPoint.y) {
+            drawingPoint = new Point((startPoint.x + drawingPoint.x) / 2, (startPoint.y + drawingPoint.y) / 2);
+            var rect = new Rect(drawingPoint.x + drawingOffset, drawingPoint.y - drawingOffset, totalWidth, totalHeight);
+            if(isRectInRect(rect, this.drawingRegion)) {
+                this.fillRectangleName(shape, rect, padding);   
+                return; 
+            }
+        }
+        
+        // Line starting from left-bottom to top-right and 
+        // Line starting from right-bottom to left-top
+        var drawingPoint = endPoint;
+        drawingOffset = textHeight / 2;
+        while(startPoint.x <= drawingPoint.x) {
+            drawingPoint = new Point((startPoint.x + drawingPoint.x) / 2, (startPoint.y + drawingPoint.y) / 2);
+            var rect = new Rect(drawingPoint.x + drawingOffset, drawingPoint.y, totalWidth, totalHeight);
+            if(isRectInRect(rect, this.drawingRegion)) {
+                this.fillRectangleName(shape, rect, padding);   
+                return; 
+            }
+        }
+
+        // All other cases.
+        var drawingPoint = endPoint;
+        drawingOffset = textHeight;
+        drawingPoint = new Point((startPoint.x + drawingPoint.x) / 2, (startPoint.y + drawingPoint.y) / 2);
+        var rect = new Rect(drawingPoint.x + drawingOffset, drawingPoint.y - drawingOffset, totalWidth, totalHeight);
+        if(isRectInRect(rect, this.drawingRegion)) {
+            this.fillRectangleName(shape, rect, padding);   
+            return; 
+        }
+        
     }
 
     /*
@@ -401,6 +466,12 @@ whiteboard.clear();
         }
     }
 
+    /*
+        drawRectangeName Method:-
+        Draws rectangle shape name
+        shape: Shape object
+        drawingRect: rectangle drawing area
+    */
     proto.drawRectangeName = function(shape, drawingRect) {
         var textHeight = 15;
         var padding = new Point(5, 5);
@@ -443,6 +514,13 @@ whiteboard.clear();
         }
     }
 
+    /*
+        fillRectangleName Method:-
+        Draws shape name in rectangle box
+        shape: Shape object
+        rect: Rectangle box
+        padding: Text padding inside box
+    */
     proto.fillRectangleName = function(shape, rect, padding) {
         var ctx = this.ctx;
 

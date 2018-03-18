@@ -44,13 +44,13 @@ function onClearButtonClick() {
 }
 
 /* Changes color for next drawing on global whiteboard object */
-
 function onColorButtonClick(color) {
     whiteboard.setColor(color);
 }
 
+/* Whiboard callback event handler to prompt shape name from end user */
 function onShapeCompleted(shape) {
-    if(shape.type == WhiteBoard.ShapeType.Rectangle) {
+    if(shape.type == WhiteBoard.ShapeType.Rectangle || shape.type == WhiteBoard.ShapeType.Arrow) {
         var shapeName = prompt("Please enter shape name");
         if(shapeName != null && shapeName.length > 0) {
             whiteboard.setShapeName(shape, shapeName);
