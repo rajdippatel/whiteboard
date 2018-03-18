@@ -89,9 +89,14 @@ whiteboard.clear();
         points: Array of points representing pixel co-ordinates
     */
     var Shape = function (type, color, points) {
+        this.name = null;
         this.type = type;
         this.color = color,
         this.points = points || [];
+    }
+
+    Shape.prototype.setName = function(name) {
+        this.name = name;
     }
 
     /*
@@ -138,6 +143,11 @@ whiteboard.clear();
         this.currentShapeType = ShapeType.Rectangle;
         this.currentColor = "#000000";
 
+        // Stores user registed event callbacks.
+        this.userEvents = {};
+
+        this.drawingRegion = null;
+
         this.init();        
     }
 
@@ -174,10 +184,10 @@ whiteboard.clear();
         Initialize canvas properties for HI-DPI (Retina) devices like MacBook, Mobiles Devices
     */
     proto.initSize = function() {
-        if(devicePixelRatio != 1) {
-            var canvas = this.canvas;
-            var ctx = this.ctx;
+        var canvas = this.canvas;
+        var ctx = this.ctx;
 
+        if(devicePixelRatio != 1) {
             var width = canvas.width;
             var height = canvas.height;
 
@@ -190,6 +200,7 @@ whiteboard.clear();
             // Scale canvas context, so all drawing operation will be adjusted accordingly.
             ctx.scale(devicePixelRatio, devicePixelRatio);
         }
+        this.drawingRegion = new Rect(0 ,0, canvas.width, canvas.height);
     }
 
     proto.setShapeType = function (shapeType) {
@@ -229,6 +240,28 @@ whiteboard.clear();
     }
 
     /*
+        addEventListener Method:-
+        eventType: event name
+        callback: event listener handler
+    */
+    proto.addEventListener = function(eventType, callback) {
+        if(typeof callback == 'function') {
+            this.userEvents[eventType] = callback;            
+        }        
+    }
+
+    /*
+        removeEventListener Method:-
+        eventType: event name
+        callback: previously registered event listener handler
+    */
+    proto.removeEventListener = function(eventType, callback) {
+        if(this.userEvents[eventType] == callback) {
+            delete this.userEvents[eventType];
+        }        
+    }
+
+    /*
         onMouseDown Event Handler:-
         Handles mouse down event from canvas element. It creates new shape object and adds to shapes array.
     */
@@ -260,7 +293,11 @@ whiteboard.clear();
         this.unRegisterEvent(document, "mousemove");
         this.unRegisterEvent(document, "mouseup");
         console.log(this.shapes);
-        this.activeShape = null;
+        try {
+            this.processShapeCompletedEvent(this.activeShape);
+        } finally {
+            this.activeShape = null;
+        }
     }
 
     /*
@@ -327,7 +364,7 @@ whiteboard.clear();
         var points = shape.points;        
         if (pixelBackupHandler) {
             var drawingRect = getMaxBoudingRect(points);
-            pixelBackupHandler(new Rect(drawingRect.x * devicePixelRatio - 25, drawingRect.y * devicePixelRatio - 25, drawingRect.width * devicePixelRatio + 50, drawingRect.height * devicePixelRatio + 50));
+            pixelBackupHandler(new Rect(drawingRect.x * devicePixelRatio - 50, drawingRect.y * devicePixelRatio - 50, drawingRect.width * devicePixelRatio + 100, drawingRect.height * devicePixelRatio + 100));
         }
 
         // Draw line
@@ -358,6 +395,85 @@ whiteboard.clear();
         this.ctx.beginPath();
         this.ctx.strokeRect(drawingRect.x + ALIAS_OFFSET, drawingRect.y + ALIAS_OFFSET, drawingRect.width, drawingRect.height);
         this.ctx.closePath();
+
+        if(shape.name) {
+            this.drawRectangeName(shape, drawingRect);
+        }
+    }
+
+    proto.drawRectangeName = function(shape, drawingRect) {
+        var textHeight = 15;
+        var padding = new Point(5, 5);
+
+        var ctx = this.ctx;
+        
+        ctx.font = textHeight + "px" + " calibri";
+        var textMetrics = ctx.measureText(shape.name);
+        
+        var totalWidth = textMetrics.width + 2 * padding.x;
+        var totalHeight = textHeight + 2 * padding.y;
+        
+        // Left-top side
+        var rect = new Rect(drawingRect.x, drawingRect.y - totalHeight, totalWidth, totalHeight);
+        if(isRectInRect(rect, this.drawingRegion)) {
+            this.fillRectangleName(shape, rect, padding);   
+            return; 
+        }
+
+        // Right-top side
+        rect.x = drawingRect.x + drawingRect.width - totalWidth;
+        if(isRectInRect(rect, this.drawingRegion)) {
+            this.fillRectangleName(shape, rect, padding);   
+            return; 
+        }
+
+        // Bottom-left side
+        rect.x = drawingRect.x;
+        rect.y = drawingRect.y + drawingRect.height;
+        if(isRectInRect(rect, this.drawingRegion)) {
+            this.fillRectangleName(shape, rect, padding);   
+            return; 
+        }
+
+        // Bottom-right side
+        rect.x = drawingRect.x + drawingRect.width - totalWidth;
+        if(isRectInRect(rect, this.drawingRegion)) {
+            this.fillRectangleName(shape, rect, padding);   
+            return; 
+        }
+    }
+
+    proto.fillRectangleName = function(shape, rect, padding) {
+        var ctx = this.ctx;
+
+        // ctx.fillStyle = "white";
+        ctx.fillStyle = shape.color;
+        ctx.globalAlpha = 0.5;
+        ctx.textBaseline = "top";
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.strokeRect(rect.x + ALIAS_OFFSET, rect.y + ALIAS_OFFSET, rect.width, rect.height);
+        ctx.closePath();
+        ctx.fillStyle = "white";
+        ctx.fillText(shape.name, rect.x + padding.x, rect.y + padding.y);        
+        
+    }
+
+    function isOrdinatesInRect(x, y, rect) {
+        return x >= rect.x 
+            && y >= rect.y 
+            && x <= rect.x + rect.width
+            && y <= rect.y + rect.height;
+    }
+
+    function isPointInRect(point, rect) {
+        return isOrdinatesInRect(point.x, point.y, rect);
+    }
+
+    function isRectInRect(rect, outerRect) {
+        return isOrdinatesInRect(rect.x, rect.y, outerRect)
+        && isOrdinatesInRect(rect.x + rect.width, rect.y + rect.height, outerRect);
     }
 
     /*
@@ -476,6 +592,18 @@ whiteboard.clear();
         ctx.closePath();
         ctx.restore();
         ctx.fill();
+    }
+
+    proto.processShapeCompletedEvent = function(shape) {
+        var callback = this.userEvents["shapeCompleted"];
+        if(callback) {
+            callback.call(this, shape);
+        }
+    }
+
+    proto.setShapeName = function(shape, shapeName) {
+        shape.setName(shapeName);
+        this.drawShapes();
     }
 
     // Expose Shape utility on whiteboard namespace

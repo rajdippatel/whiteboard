@@ -9,7 +9,8 @@ Whiteboard public api test file.
 var whiteboard;
 /* Register page onload event to initialize whiteboard object globally */
 window.onload = function () {
-    whiteboard = new WhiteBoard("whiteboard");    
+    whiteboard = new WhiteBoard("whiteboard"); 
+    whiteboard.addEventListener("shapeCompleted", onShapeCompleted);   
 }
 
 /* Sets Rangle shape type on global whiteboard object */
@@ -22,7 +23,7 @@ function onFreeHandButtonClick() {
     whiteboard.setShapeType(WhiteBoard.ShapeType.FreeHand);
 }
 
-/* Sets Arrway shape type on global whiteboard object */
+/* Sets Arrow shape type on global whiteboard object */
 function onArrowButtonClick() {
     whiteboard.setShapeType(WhiteBoard.ShapeType.Arrow);    
 }
@@ -47,4 +48,14 @@ function onClearButtonClick() {
 function onColorButtonClick(color) {
     whiteboard.setColor(color);
 }
+
+function onShapeCompleted(shape) {
+    if(shape.type == WhiteBoard.ShapeType.Rectangle) {
+        var shapeName = prompt("Please enter shape name");
+        if(shapeName != null && shapeName.length > 0) {
+            whiteboard.setShapeName(shape, shapeName);
+        }
+    }
+}
+
 
