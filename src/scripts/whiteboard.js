@@ -104,6 +104,30 @@ whiteboard.clear();
     }
 
     /*
+        getPoints Method:-
+        Returns: points array.
+    */
+    Shape.prototype.getPoints = function() {
+        return this.points;
+    }
+
+    /*
+        deserialize Method:-
+        Deserializes shapes Json and creates internal shapes object.
+        Returns: shapes object
+    */
+    Shape.deserialize = function(shapeJson) {
+        var shape = new Shape(shapeJson.type, shapeJson.color);
+        shape.setName(shapeJson.name);
+        var points = shape.getPoints();
+        for (let i = 0; i < shapeJson.points.length; i++) {
+            const pointJson = shapeJson.points[i];
+            points.push(new Point(pointJson.x, pointJson.y));
+        }
+        return shape;
+    }
+
+    /*
         WhiteBoard Class:-
         [canvas]: canvas id or canvas element
 
@@ -682,6 +706,18 @@ whiteboard.clear();
     proto.setShapeName = function(shape, shapeName) {
         shape.setName(shapeName);
         this.drawShapes();
+    }
+
+    proto.restore = function(shapesJson) {
+        var shapes = JSON.parse(shapesJson);
+        for(var i = 0; i < shapes.length; i++) {
+            this.shapes.push(Shape.deserialize(shapes[i]));
+        }
+        this.drawShapes();
+    }
+    
+    proto.save = function() {
+        return JSON.stringify(this.shapes);
     }
 
     // Expose Shape utility on whiteboard namespace
